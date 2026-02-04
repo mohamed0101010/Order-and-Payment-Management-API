@@ -9,6 +9,7 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,9 +34,13 @@ jobs:
       - name: Prepare environment
         run: |
           cp .env.example .env || true
+
+          # Ensure cipher exists before generating key
+          echo "APP_CIPHER=aes-256-cbc" >> .env
+          php artisan key:generate --ansi
+
           echo "DB_CONNECTION=sqlite" >> .env
           echo "DB_DATABASE=:memory:" >> .env
-          php artisan key:generate --ansi
 
       - name: Run migrations
         run: php artisan migrate --force
