@@ -38,11 +38,17 @@ jobs:
           echo "APP_CIPHER=aes-256-cbc" >> .env
           php artisan key:generate --ansi
 
-          # Generate JWT secret for tests
-          php artisan jwt:secret --force
+          php artisan jwt:secret --force || true
+          echo "JWT_SECRET=$(php -r 'echo bin2hex(random_bytes(32));')" >> .env
 
           echo "DB_CONNECTION=sqlite" >> .env
           echo "DB_DATABASE=:memory:" >> .env
+
+          cp .env .env.testing
+
+          # clear config just in case
+          php artisan config:clear
+
 
       - name: Run migrations
         run: php artisan migrate --force
