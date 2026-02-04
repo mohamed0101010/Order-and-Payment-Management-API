@@ -28,26 +28,28 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
-      - name: Install dependencies
-        run: composer install --no-progress --prefer-dist
-
       - name: Prepare environment
         run: |
           cp .env.example .env || true
 
+          # Force supported cipher first (IMPORTANT)
+          sed -i '/^APP_CIPHER=/d' .env
           echo "APP_CIPHER=aes-256-cbc" >> .env
-          php artisan key:generate --ansi
 
-          php artisan jwt:secret --force || true
-          echo "JWT_SECRET=$(php -r 'echo bin2hex(random_bytes(32));')" >> .env
+          # Force a valid 32-byte key for aes-256-cbc
+          sed -i '/^APP_KEY=/d' .env
+          echo "APP_KEY=base64:$(php -r 'echo base64_encode(random_bytes(32));')" >> .env
 
+          # sqlite memory
           echo "DB_CONNECTION=sqlite" >> .env
           echo "DB_DATABASE=:memory:" >> .env
 
+          # Make sure tests use same env
           cp .env .env.testing
 
-          # clear config just in case
           php artisan config:clear
+          php artisan cache:clear
+
 
 
       - name: Run migrations
