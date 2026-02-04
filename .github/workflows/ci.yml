@@ -18,7 +18,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: pdo_sqlite
+          extensions: sqlite, pdo_sqlite
 
       - name: Get Composer cache
         uses: actions/cache@v4
@@ -35,27 +35,36 @@ jobs:
         run: |
           cp .env.example .env || true
 
-          # Force supported cipher first
+          sed -i '/^APP_ENV=/d' .env
+          echo "APP_ENV=testing" >> .env
+
+          sed -i '/^APP_DEBUG=/d' .env
+          echo "APP_DEBUG=true" >> .env
+
           sed -i '/^APP_CIPHER=/d' .env
           echo "APP_CIPHER=aes-256-cbc" >> .env
 
-          # Force a valid 32-byte key for aes-256-cbc
           sed -i '/^APP_KEY=/d' .env
           echo "APP_KEY=base64:$(php -r 'echo base64_encode(random_bytes(32));')" >> .env
 
-          # sqlite memory
+          sed -i '/^DB_CONNECTION=/d' .env
+          sed -i '/^DB_DATABASE=/d' .env
           echo "DB_CONNECTION=sqlite" >> .env
           echo "DB_DATABASE=:memory:" >> .env
 
-          # JWT secret to avoid "Secret is not set."
+          sed -i '/^CACHE_STORE=/d' .env
+          echo "CACHE_STORE=array" >> .env
+
+          sed -i '/^SESSION_DRIVER=/d' .env
+          echo "SESSION_DRIVER=array" >> .env
+
           sed -i '/^JWT_SECRET=/d' .env
           echo "JWT_SECRET=$(php -r 'echo bin2hex(random_bytes(32));')" >> .env
 
-          # Make sure tests use same env
           cp .env .env.testing
 
           php artisan config:clear
-          php artisan cache:clear
+          php artisan route:clear || true
 
       - name: Run migrations
         run: php artisan migrate --force
