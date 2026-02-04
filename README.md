@@ -42,9 +42,6 @@ Run:
 `php artisan test`
 
 ## Postman
-Import the collection JSON from:
-`postman_collection.json`
-## Postman
 
 Import the collection JSON from:
 `Order Payments API.postman_collection.json` (root). Use environment variables `baseUrl` and `token`.
