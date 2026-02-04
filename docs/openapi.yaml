@@ -1,0 +1,118 @@
+openapi: 3.0.3
+info:
+  title: Order Payments API
+  version: 1.0.0
+  description: Minimal OpenAPI spec for Orders and Payments
+servers:
+  - url: /api/v1
+paths:
+  /orders:
+    get:
+      summary: List orders
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+        - in: query
+          name: per_page
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Create order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                customer_name: { type: string }
+                customer_email: { type: string }
+                items:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      product_name: { type: string }
+                      quantity: { type: integer }
+                      price: { type: number }
+      responses:
+        '201':
+          description: Created
+  /orders/{orderId}:
+    get:
+      summary: Get order
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+    put:
+      summary: Update order
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderUpdate'
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Delete order
+      parameters:
+        - in: path
+          name: orderId
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200': { description: Deleted }
+        '409': { description: Conflict - payments exist }
+  /payments/process:
+    post:
+      summary: Process payment for order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                order_id: { type: integer }
+                method: { type: string }
+                amount: { type: number }
+                payload: { type: object }
+      responses:
+        '201': { description: Payment created }
+        '422': { description: Unprocessable Entity }
+components:
+  schemas:
+    OrderUpdate:
+      type: object
+      properties:
+        customer_name: { type: string }
+        customer_email: { type: string }
+        status: { type: string }
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              product_name: { type: string }
+              quantity: { type: integer }
+              price: { type: number }
